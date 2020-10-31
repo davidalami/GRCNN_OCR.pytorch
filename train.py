@@ -14,6 +14,8 @@ import shutil
 from tqdm import tqdm
 import argparse
 
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
 parser = argparse.ArgumentParser(description='PyTorch GCRNN Training')
 
 parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
@@ -38,9 +40,6 @@ parser.add_argument('--val_main_path', default='./data_sample/', type=str, help=
 args = parser.parse_args()
 
 
-if args.is_use_gpu:
-    os.environ['CUDA_VISIBLE_DEVICES']=args.gpu_list
-
 if os.path.exists(args.model_save_path):
     shutil.rmtree(args.model_save_path)
 os.mkdir(args.model_save_path)
@@ -61,11 +60,10 @@ crnn = GRCNN.GRCNN(args.n_class)
 crnn.apply(weights_init)
 
 
-if args.is_use_gpu:
-    crnn = crnn.cuda()
-    criterion = CTCLoss().cuda()
-else:
-    criterion = CTCLoss()
+
+crnn = crnn.to(device)
+criterion = CTCLoss().to(device)
+
 #net.cuda()
 print('net has load!')
 converter = utils.strLabelConverter(args.alphabet)
@@ -105,7 +103,7 @@ for epoch in range(1, args.epoches, 1):
         txt_label = txt_label.numpy().reshape(args.max_len*batch_length)
         txt_label = torch.from_numpy(np.array([item for item in txt_label if item != 0]).astype(np.int))
         if args.is_use_gpu:
-            img_tensor = Variable(img_tensor.float()).cuda()
+            img_tensor = Variable(img_tensor.float()).to(device)
         else:
             img_tensor = Variable(img_tensor.float())
         txt_len = Variable(txt_len.int()).squeeze(1)
@@ -136,7 +134,7 @@ for epoch in range(1, args.epoches, 1):
     for img_path in val_img_list:
         img_tensor, gt = get_img(img_path)
         if args.is_use_gpu:
-            img_tensor = Variable(img_tensor).cuda()
+            img_tensor = Variable(img_tensor).to(device)
         else:
             img_tensor = Variable(img_tensor)
         preds = crnn(img_tensor)
@@ -163,7 +161,7 @@ for epoch in range(1, args.epoches, 1):
         best_acc = test_acc
         if args.is_use_gpu:
             torch.save(crnn.cpu().state_dict(), args.model_save_path + 'cpu_model_parameter_' + str(epoch) + '.pkl')
-            crnn.cuda()
+            crnn.to(device)
         else:
             torch.save(crnn.state_dict(), args.model_save_path + 'cpu_model_parameter_' + str(epoch) + '.pkl')
         np.savetxt(args.model_save_path + 'total_loss.csv', totalLoss)
