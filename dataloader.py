@@ -65,6 +65,7 @@ class MyDataSet(data.Dataset):
             txt_len = (torch.zeros(1) + txt_len).int()
             txt_label = torch.from_numpy(np.array(txt_label)).int()
         except Exception as e:
+            print(e)
             return  self.__getitem__(index + 1)
         return img_tensor, txt_len, txt_label, txt_name
 
@@ -107,7 +108,7 @@ class MyDataSet(data.Dataset):
 if __name__=='__main__':
     dataset=MyDataSet('./data_sample/',100,32,20)
 
-    trainloader=torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True, num_workers=1)
+    trainloader=torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True, num_workers=0)
     for batch_id,(img_tensor, txt_len, txt_label, txt_name) in enumerate(trainloader):
 
         break
