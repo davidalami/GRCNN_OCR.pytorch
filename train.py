@@ -84,7 +84,7 @@ def get_img(img_path):
     img = img / 255
     img = img - 0.5
     img = img * 2
-    img_tensor = torch.from_numpy(img).float()
+    img_tensor = torch.from_numpy(img).float().to(device)
     true_label = img_path.replace('.jpg', '').split('_')[-1]
     return img_tensor, true_label
 
