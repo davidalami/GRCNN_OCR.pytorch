@@ -72,7 +72,7 @@ for img_path in test_img_list:
     preds_size = Variable(torch.IntTensor([preds.size(0)]))
     raw_pred = converter.decode(preds.data, preds_size.data, raw=True)
     sim_pred = converter.decode(preds.data, preds_size.data, raw=False)
-    print('%-33s => %-33s' % (raw_pred, sim_pred))
+    print(f'{img_path} -> {sim_pred}')
 
 
 
