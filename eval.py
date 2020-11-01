@@ -33,7 +33,7 @@ if os.path.exists(args.test_result_save_path):
     shutil.rmtree(args.test_result_save_path)
 os.mkdir(args.test_result_save_path)
 
-test_img_list = glob(args.test_data_path + '*.jpg')
+test_img_list = sorted(glob(args.test_data_path + '*.jpg'))
 
 
 crnn = GRCNN.GRCNN(args.n_class)
