@@ -34,7 +34,7 @@ os.mkdir(args.test_result_save_path)
 test_img_list = glob(args.test_data_path + '*.jpg')
 
 
-crnn = GRCNN.GRCNN(nclass=args.n_class)
+crnn = GRCNN.GRCNN(args.n_class)
 crnn.load_state_dict(torch.load(args.pre_train_model_path))
 
 if args.is_use_gpu:
