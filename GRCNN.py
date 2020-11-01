@@ -66,14 +66,13 @@ class GRCNN(nn.Module):
     def __init__(self, n_class=37):
         super(GRCNN, self).__init__()
         self.n_class = n_class
-        q = 256
-        self.conv_layer_1 = nn.Sequential(nn.Conv2d(1, q, kernel_size=4, stride=1, padding=1),
-                                          nn.BatchNorm2d(q), nn.ReLU())
-        self.GRCL_layer_1 = GRCL(q, q, kernel_size=3, stride=(1, 1), padding=(1, 1))
-        self.GRCL_layer_2 = GRCL(q, q, kernel_size=3, stride=(1, 1), padding=(1, 1))
-        self.GRCL_layer_3 = GRCL(q, q, kernel_size=3, stride=(1, 1), padding=(1, 1))
+        self.conv_layer_1 = nn.Sequential(nn.Conv2d(1, 64, kernel_size=3, stride=1, padding=1),
+                                          nn.BatchNorm2d(64), nn.ReLU())
+        self.GRCL_layer_1 = GRCL(64, 64, kernel_size=3, stride=(1, 1), padding=(1, 1))
+        self.GRCL_layer_2 = GRCL(64, 128, kernel_size=3, stride=(1, 1), padding=(1, 1))
+        self.GRCL_layer_3 = GRCL(128, 256, kernel_size=3, stride=(1, 1), padding=(1, 1))
 
-        self.conv_layer_2 = nn.Sequential(nn.Conv2d(q, 512, kernel_size=2, stride=1, padding=0),
+        self.conv_layer_2 = nn.Sequential(nn.Conv2d(256, 512, kernel_size=2, stride=1, padding=0),
                                           nn.BatchNorm2d(512), nn.ReLU())
         self.rnn = nn.Sequential(
             BidirectionalLSTM(512, 256, 256),
@@ -81,15 +80,15 @@ class GRCNN(nn.Module):
 
     def forward(self, x):
         x = self.conv_layer_1(x)
-        x = F.max_pool2d(x, kernel_size=3, stride=2)
+        x = F.max_pool2d(x, kernel_size=2, stride=2)
         x = self.GRCL_layer_1(x)
-        x = F.max_pool2d(x, kernel_size=3, stride=2)
+        x = F.max_pool2d(x, kernel_size=2, stride=2)
         x = self.GRCL_layer_2(x)
-        x = F.max_pool2d(x, kernel_size=3, stride=(2, 1), padding=(0, 1))
+        x = F.max_pool2d(x, kernel_size=2, stride=(2, 1), padding=(0, 1))
         x = self.GRCL_layer_3(x)
-        x = F.max_pool2d(x, kernel_size=3, stride=(2, 1), padding=(0, 1))
+        x = F.max_pool2d(x, kernel_size=2, stride=(2, 1), padding=(0, 1))
         conv = self.conv_layer_2(x)
-        print(conv.size())
+
         b, c, h, w = conv.size()
         assert h == 1, "the height of conv must be 1"
         conv = conv.squeeze(2)
@@ -99,14 +98,12 @@ class GRCNN(nn.Module):
 
 
 
+
 if __name__ == '__main__':
     model = GRCNN(37)
-    x = torch.rand(1, 1, 60, 300)
+    x = torch.rand(1, 1, 32, 100)
     y = model(x)
     # model = GRCL(32, 64, n_iter=3, kernel_size=3, stride=1, padding=1)
     # x = torch.rand(1, 32, 32, 200)
     # y = model(x)
     #print(model)
-
-
-
