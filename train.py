@@ -22,13 +22,12 @@ parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
 parser.add_argument('--beta1', default=0.5, type=float, help='beta1')
 parser.add_argument('--beta2', default=0.999, type=float, help='beta2')
 parser.add_argument('--epoches', default=2, type=int, help='the number of train')
-parser.add_argument('--is_use_gpu', default=False, type=bool, help='is use gpu')
 parser.add_argument('--gpu_list', default='-1', type=str, help='gpu_list')
 parser.add_argument('--batch_size', default=2, type=int, help='min batch size')
 parser.add_argument('--n_class', default=37, type=int, help='the number of class')
 parser.add_argument('--n_hidden', default=64, type=int, help='the number of hidden unit')
-parser.add_argument('--img_w', default=100, type=int, help='the width of image')
-parser.add_argument('--img_h', default=32, type=int, help='the height of image')
+parser.add_argument('--img_w', default=384, type=int, help='the width of image')
+parser.add_argument('--img_h', default=128, type=int, help='the height of image')
 parser.add_argument('--max_len', default=20, type=int, help='max length(for data load)')
 parser.add_argument('--num_worker', default=2, type=int, help='the number of work')
 parser.add_argument('--alphabet', default='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', type=str, help='alphabet')
@@ -102,10 +101,9 @@ for epoch in range(1, args.epoches, 1):
         batch_length = img_tensor.size(0)
         txt_label = txt_label.numpy().reshape(args.max_len*batch_length)
         txt_label = torch.from_numpy(np.array([item for item in txt_label if item != 0]).astype(np.int))
-        if args.is_use_gpu:
-            img_tensor = Variable(img_tensor.float()).to(device)
-        else:
-            img_tensor = Variable(img_tensor.float())
+
+        img_tensor = Variable(img_tensor.float()).to(device)
+
         txt_len = Variable(txt_len.int()).squeeze(1)
         txt_label = Variable(txt_label.int())
 
@@ -133,10 +131,9 @@ for epoch in range(1, args.epoches, 1):
     crnn.eval()
     for img_path in val_img_list:
         img_tensor, gt = get_img(img_path)
-        if args.is_use_gpu:
-            img_tensor = Variable(img_tensor).to(device)
-        else:
-            img_tensor = Variable(img_tensor)
+
+        img_tensor = Variable(img_tensor).to(device)
+
         preds = crnn(img_tensor)
         _, preds = preds.max(2)
         preds = preds.transpose(1, 0).contiguous().view(-1)
@@ -159,11 +156,9 @@ for epoch in range(1, args.epoches, 1):
     # save result
     if best_acc <= test_acc:
         best_acc = test_acc
-        if args.is_use_gpu:
-            torch.save(crnn.cpu().state_dict(), args.model_save_path + 'cpu_model_parameter_' + str(epoch) + '.pkl')
-            crnn.to(device)
-        else:
-            torch.save(crnn.state_dict(), args.model_save_path + 'cpu_model_parameter_' + str(epoch) + '.pkl')
+        torch.save(crnn.cpu().state_dict(), args.model_save_path + 'cpu_model_parameter_' + str(epoch) + '.pkl')
+        crnn.to(device)
+
         np.savetxt(args.model_save_path + 'total_loss.csv', totalLoss)
         np.savetxt(args.model_save_path + 'avg_test_acc.csv', avg_test_acc)
         np.savetxt(args.model_save_path + 'avg_train_acc.csv', avg_train_acc)
