@@ -10,6 +10,8 @@ import utils
 import shutil
 import argparse
 
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
 parser = argparse.ArgumentParser(description='PyTorch GRCNN Evaluation')
 
 parser.add_argument('--is_use_gpu', default=False, type=bool, help='is use gpu')
@@ -38,7 +40,7 @@ crnn = GRCNN.GRCNN(args.n_class)
 crnn.load_state_dict(torch.load(args.pre_train_model_path))
 
 if args.is_use_gpu:
-    crnn = crnn.cuda()
+    crnn = crnn.to(device)
 print('net has load!')
 converter = utils.strLabelConverter(args.alphabet)
 crnn.eval()
@@ -61,7 +63,7 @@ def get_img(img_path):
 for img_path in test_img_list:
     img_tensor = get_img(img_path)
     if args.is_use_gpu:
-        img_tensor = Variable(img_tensor).cuda()
+        img_tensor = Variable(img_tensor).to(device)
     else:
         img_tensor = Variable(img_tensor)
     preds = crnn(img_tensor)
