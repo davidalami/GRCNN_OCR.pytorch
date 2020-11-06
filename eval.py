@@ -9,6 +9,7 @@ from glob import glob
 import utils
 import shutil
 import argparse
+import csv
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -59,20 +60,25 @@ def get_img(img_path):
     img_tensor = torch.from_numpy(img).float()
     return img_tensor
 
-
-for img_path in test_img_list:
-    img_tensor = get_img(img_path)
-    if args.is_use_gpu:
-        img_tensor = Variable(img_tensor).to(device)
-    else:
-        img_tensor = Variable(img_tensor)
-    preds = crnn(img_tensor)
-    _, preds = preds.max(2)
-    preds = preds.transpose(1, 0).contiguous().view(-1)
-    preds_size = Variable(torch.IntTensor([preds.size(0)]))
-    raw_pred = converter.decode(preds.data, preds_size.data, raw=True)
-    sim_pred = converter.decode(preds.data, preds_size.data, raw=False)
-    print(f'{img_path} -> {sim_pred}')
+with open('prediction_table.csv', 'w', newline='') as csvfile:
+    for img_path in test_img_list:
+        img_tensor = get_img(img_path)
+        if args.is_use_gpu:
+            img_tensor = Variable(img_tensor).to(device)
+        else:
+            img_tensor = Variable(img_tensor)
+        preds = crnn(img_tensor)
+        _, preds = preds.max(2)
+        preds = preds.transpose(1, 0).contiguous().view(-1)
+        preds_size = Variable(torch.IntTensor([preds.size(0)]))
+        raw_pred = converter.decode(preds.data, preds_size.data, raw=True)
+        sim_pred = converter.decode(preds.data, preds_size.data, raw=False)
+    
+    
+        spamwriter = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_MINIMAL)
+        spamwriter.writerow([img_path, sim_pred])
+        
+        print(f'{img_path} -> {sim_pred}')
 
 
 
